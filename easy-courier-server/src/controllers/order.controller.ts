@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import Order from "../models/Order";
 import { User } from "../models/User";
+import mongoose from "mongoose";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -35,32 +36,37 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
 // Get all
 export const getOrders = async (req: Request, res: Response) => {
   try {
-    const { search = "", status } = req.query;
-    const query: any = {};
+    const { search = "", status } = req.query
+    const query: any = {}
 
     if (search) {
-      const searchRegex = new RegExp(search as string, "i"); 
+      const searchRegex = new RegExp(search as string, "i")
 
       query.$or = [
         { fromAddress: searchRegex },
         { toAddress: searchRegex },
         { senderName: searchRegex },
-      ];
+      ]
+
+      const isValidObjectId = mongoose.Types.ObjectId.isValid(search as string)
+      if (isValidObjectId) {
+        query.$or.push({ _id: search })
+      }
     }
 
     if (status) {
-      query.status = status;
+      query.status = status
     }
 
     const orders = await Order.find(query)
       .populate("sender")
-      .populate("deliveryMan");
+      .populate("deliveryMan")
 
-    res.json(orders);
+    res.json(orders)
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message })
   }
-};
+}
 
 
 
@@ -122,3 +128,32 @@ export const deleteOrder = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+// POST assign order
+export const assignOrder = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { orderId, deliveryManId, adminId } = req.body
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      orderId,
+      {
+        deliveryMan: deliveryManId,
+        status: "Assigned",
+        assignedBy: adminId,
+        assignedAt: new Date(),
+      },
+      { new: true }
+    ).populate("sender deliveryMan assignedBy")
+
+    if (!updatedOrder) {
+       res.status(404).json({ error: "Order not found" })
+       return;
+    }
+
+    res.status(200).json(updatedOrder)
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || "Failed to assign delivery man" })
+  }
+}
+

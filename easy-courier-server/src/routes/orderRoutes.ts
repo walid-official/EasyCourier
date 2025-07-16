@@ -1,4 +1,4 @@
-import express from "express";
+import express from "express"
 import {
   createOrder,
   deleteOrder,
@@ -6,16 +6,20 @@ import {
   getOrders,
   getOrdersByEmail,
   updateOrder,
-} from "../controllers/order.controller";
-import { protect } from "../middlewares/authMiddleware"; 
+  assignOrder, // ✅ new import
+} from "../controllers/order.controller"
 
-const router = express.Router();
+import { protect } from "../middlewares/authMiddleware"
 
-router.post("/", createOrder);
-router.get("/", getOrders);
-router.get("/by-email", protect, getOrdersByEmail); 
-router.get("/:id", getOrderById);
-router.put("/:id", updateOrder);
-router.delete("/:id", deleteOrder);
+const router = express.Router()
 
-export default router;
+router.post("/", createOrder)
+router.post("/assign", protect, assignOrder) 
+router.get("/", getOrders)
+router.get("/by-email", protect, getOrdersByEmail)
+router.get("/:id", getOrderById)
+router.put("/:id", updateOrder)
+router.delete("/:id", deleteOrder)
+
+
+export default router

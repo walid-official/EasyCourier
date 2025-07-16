@@ -61,11 +61,5 @@ const orderSchema = new Schema<IOrder>(
   }
 );
 
-orderSchema.index({
-  fromAddress: "text",
-  toAddress: "text",
-  senderName: "text",  
-});
-
 const Order = mongoose.model<IOrder>("Order", orderSchema);
 export default Order;
