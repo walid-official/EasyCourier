@@ -1,3 +1,4 @@
+// src/models/User.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUser extends Document {
@@ -5,7 +6,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: 'shop owner' | 'delivery man';
-  avatar: string;
+  avatar?: string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -14,7 +15,7 @@ const UserSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['shop owner', 'delivery man'], required: true },
-    avatar: String,
+    avatar: { type: String },
   },
   { timestamps: true }
 );
