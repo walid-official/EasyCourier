@@ -14,7 +14,7 @@ app.use(morgan('dev'));
 
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/order', orderRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Root route
 app.get('/', (_req, res) => {

@@ -9,6 +9,7 @@ export interface IOrder extends Document {
   weight: string;
   price: number;
   status: "Pending" | "Picked" | "Delivered";
+  senderName: string
 }
 
 const orderSchema = new Schema<IOrder>(
@@ -17,6 +18,11 @@ const orderSchema = new Schema<IOrder>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    senderName: {             
+      type: String,
+      required: true,
+      index: true,
     },
     deliveryMan: {
       type: Schema.Types.ObjectId,
@@ -54,6 +60,12 @@ const orderSchema = new Schema<IOrder>(
     timestamps: true,
   }
 );
+
+orderSchema.index({
+  fromAddress: "text",
+  toAddress: "text",
+  senderName: "text",  
+});
 
 const Order = mongoose.model<IOrder>("Order", orderSchema);
 export default Order;

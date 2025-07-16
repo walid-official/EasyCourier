@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Order from "../models/Order";
+import { User } from "../models/User";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -9,25 +10,59 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-// Create
-export const createOrder = async (req: Request, res: Response) => {
+export const createOrder = async (req: Request, res: Response): Promise<void> => {
   try {
-    const order = await Order.create(req.body);
+    const { sender, ...rest } = req.body;
+    const senderUser = await User.findById(sender);
+    if (!senderUser) {
+       res.status(404).json({ error: "Sender not found" });
+       return;
+    }
+
+    const order = await Order.create({
+      sender,
+      senderName: senderUser.name,  
+      ...rest,
+    });
+
     res.status(201).json(order);
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
 };
 
+
 // Get all
-export const getOrders = async (_req: Request, res: Response) => {
+export const getOrders = async (req: Request, res: Response) => {
   try {
-    const orders = await Order.find().populate("sender").populate("deliveryMan");
+    const { search = "", status } = req.query;
+    const query: any = {};
+
+    if (search) {
+      const searchRegex = new RegExp(search as string, "i"); 
+
+      query.$or = [
+        { fromAddress: searchRegex },
+        { toAddress: searchRegex },
+        { senderName: searchRegex },
+      ];
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    const orders = await Order.find(query)
+      .populate("sender")
+      .populate("deliveryMan");
+
     res.json(orders);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 // Get one
 export const getOrderById = async (req: Request, res: Response): Promise<void> => {
