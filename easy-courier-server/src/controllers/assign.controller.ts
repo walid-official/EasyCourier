@@ -2,6 +2,7 @@ import { AuthRequest } from "../middlewares/authMiddleware";
 import { Assignment } from "../models/Assignment";
 import Order from "../models/Order";
 import { Response } from "express";
+import { User } from "../models/User";
 
 export const assignDelivery = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -42,12 +43,28 @@ export const assignDelivery = async (req: AuthRequest, res: Response): Promise<v
 };
 
 
+// GET /api/assignments?email=deliveryman@example.com
+
 export const getAssignments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const assignments = await Assignment.find()
+    const { email } = req.query;
+
+    // Step 1: If email is provided, find the delivery man user
+    let filter: any = {};
+    if (email) {
+      const deliveryMan = await User.findOne({ email });
+      if (!deliveryMan) {
+        res.status(404).json({ message: "Delivery man not found" });
+        return;
+      }
+      filter.deliveryManId = deliveryMan._id;
+    }
+
+    // Step 2: Apply filter
+    const assignments = await Assignment.find(filter)
       .populate("orderId")
-      .populate("deliveryManId", "name email") 
-      .populate("assignedBy", "name email") 
+      .populate("deliveryManId", "name email")
+      .populate("assignedBy", "name email");
 
     res.status(200).json(assignments);
   } catch (error: any) {
